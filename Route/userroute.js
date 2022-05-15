@@ -4,28 +4,26 @@ const router = express.Router();
 const user = require("../Model/userModel");
 const jwt = require("jsonwebtoken");
 
-router.post("/login", async  (req, res)=> {
+router.post("/login", async (req, res) => {
   console.log("login>>>", req.body);
-  const { username, password } = req.body;
+
+  const { email, password } = req.body;
 
   const oldUser = {
-    username,
+    email,
     password,
   };
 
   console.log(oldUser);
-  const accessToken = jwt.sign(oldUser, process.env.ACCESS_TOKEN_SECRET, {
-    // expiresIn: "1800s",
-  });
 
   await user
-    .findOne({ username })
+    .findOne({ email, password })
     .then((response) => {
       console.log("login response data>>", response);
       if (response) {
         res.send({
           success: true,
-          data: { response, accessToken },
+          data: response,
         });
       } else {
         res.send({
@@ -40,23 +38,19 @@ router.post("/login", async  (req, res)=> {
 });
 
 router.route("/signup").post(async (req, res) => {
-  const { email, password, fullname, username, mobile } = req.body;
+  const { email, username, fullname, phone, password } = req.body;
   console.log("credentials>>>signup>>>", req.body);
 
   const oldUser = new user({
     email,
-    password,
-    fullname,
     username,
-    mobile,
-  });
-
-  const accessToken = jwt.sign(oldUser.toJSON(), process.env.ACCESS_TOKEN_SECRET, {
-    // expiresIn: "1800s",
+    fullname,
+    phone,
+    password,
   });
 
   const isExisting = await user.findOne({
-    username,
+    email,
   });
   console.log("Isexisting:", isExisting);
   if (isExisting) {
@@ -71,7 +65,7 @@ router.route("/signup").post(async (req, res) => {
         console.log("DBSAVE>>signup>>>", response);
         res.send({
           success: true,
-          data: {response,accessToken},
+          data: response,
         });
       })
       .catch((err) => console.log("DBSAVE>>>>err>>", err));

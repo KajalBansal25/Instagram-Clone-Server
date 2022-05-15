@@ -8,65 +8,28 @@ const multer = require("multer");
 const authenticateToken = require("../API/auth.js");
 const { sendStatus } = require("express/lib/response");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./public");
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    console.log(file, ">>filefile>>>>>");
+    cb(null, "./uploads");
   },
-  filename: (req, file, cb) => {
-    console.log("FILENAME", file);
-    cb(null, Date.now() + path.extname(file.originalname));
+  filename: function (req, file, cb) {
+    cb(null, file.fileNamename);
   },
 });
 
 const upload = multer({ storage });
 
-app.post("/uploadpost", upload.single("image"),authenticateToken, (req, res) => {
-  console.log("req>>>uploadpost>>>", req.headers.token);
-  const {
-    originalname: fileName,
-    path: filePath,
-    mimetype: fileType,
-  } = req.file || {};
-  const fileSize = fileSizeFormatter(req.file.size, 2);
-  const postedBy = req.body.postedBy;
-  const username = req.body.username;
+app.post("/uploadpost", (req, res) => {
+  // console.log("req file>>>>", typeof req.body.file);
+  
+  console.log("req.files>>>", req.files);
 
-  console.log("uploadpost>>>", fileName);
-  const oldFile = new img({
-    fileName,
-    filePath,
-    fileType,
-    fileSize,
-    postedBy,
-    username,
-  });
-
-  oldFile
-    .save()
-    .then((response) => {
-      console.log("Db save :", response);
-      res.send({
-        success: true,
-        data: response,
-      });
-    })
-    .catch((err) => console.log("DBsave>>Err", err));
+  console.log("req.body>>>>", req.body);
+  res.send("hi kajal>>>");
 });
 
-const fileSizeFormatter = (bytes, decimal) => {
-  if (bytes === 0) {
-    fileName;
-    return "0 Bytes";
-  }
-  const dm = decimal || 2;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "YB", "ZB"];
-  const index = Math.floor(Math.log(bytes) / Math.log(1000));
-  return (
-    parseFloat((bytes / Math.pow(1000, index)).toFixed(dm)) + " " + sizes[index]
-  );
-};
-
-app.delete("/deletepost/:_id", authenticateToken,(req, res) => {
+app.delete("/deletepost/:_id", authenticateToken, (req, res) => {
   console.log("req.params._id>>>deletepost>>>", req.params._id);
   console.log("req>>>deletepost>>>", req.headers.token);
   const id = req.params._id;
@@ -74,32 +37,35 @@ app.delete("/deletepost/:_id", authenticateToken,(req, res) => {
     .deleteOne({ _id: id })
     .then((response) => {
       console.log("response>>>deletepost>>>", response);
-      res.sendStatus(200)
+      res.sendStatus(200);
     })
     .catch((err) => console.log("err>>>deletepost>>>", err));
-    
 });
 
-app.post("/getpost", authenticateToken, (req, res) => {
+const _imageEncode = (arrayBuffer) => {
+  let u8 = new Uint8Array(arrayBuffer);
+  let b64encoded = btoa(
+    [].reduce.call(
+      new Uint8Array(arrayBuffer),
+      (p, c) => {
+        return p + String.fromCharCode(c);
+      },
+      ""
+    )
+  );
+};
+
+app.get("/getpost", (req, res) => {
   console.log("req.body>>>getprofilepost>>>", req.body);
-  console.log("req>>>getprofilepost>>>", req.headers.token);
-  if (req.body.id === "") {
-    img
-      .find()
-      .then((response) => {
-        console.log("response>>>getprofilepost>>>inside if", response);
-        res.send(response);
-      })
-      .catch((err) => console.log("err>>>getprofilepost>>>if", err));
-  } else {
-    img
-      .find({ postedBy: req.body.id })
-      .then((response) => {
-        console.log("response>>>getprofilepost>>>else", response);
-        res.send(response);
-      })
-      .catch((err) => console.log("err>>>getprofilepost>>>else", err));
-  }
+  responseType: "arraybuffer";
+
+  img
+    .find()
+    .then((response) => {
+      console.log("response>>>getprofilepost>>>", response);
+      res.send(response);
+    })
+    .catch((err) => console.log("err>>>getprofilepost>>>", err));
 });
 
 module.exports = app;

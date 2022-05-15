@@ -14,16 +14,16 @@ const singleFileSchema = new mongoose.Schema({
   },
   fileSize: {
     type: String,
-    required: true,
+    // required: true,
   },
   postedBy: {
     type: mongoose.Types.ObjectId,
     ref: "user",
   },
-  username: {
-    type: String,
-    required: true,
-  },
+  // username: {
+  //   type: String,
+  //   required: true,
+  // },
 });
 
 module.exports = mongoose.model("img", singleFileSchema);
